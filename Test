@@ -1,0 +1,692 @@
+-- BaorModz-V1 Menu Cheat (Gojo Theme Edition) - Delta Executor
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Xóa menu cũ nếu tồn tại
+if CoreGui:FindFirstChild("BaorModzV1") then
+    CoreGui.BaorModzV1:Destroy()
+end
+
+-- Tạo ScreenGui chính
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BaorModzV1"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- HỆ THỐNG BYPASS & ANTI-BAN NGẦM
+local function InitBypassAndAntiBan()
+    pcall(function()
+        if setscriptable then
+            setscriptable(LocalPlayer, "SimulationRadius", true)
+        end
+        LocalPlayer.SimulationRadius = math.huge
+        
+        for _, v in pairs(getconnections(Players.LocalPlayer.Idled)) do
+            v:Disable()
+        end
+    end)
+    print("[BaorModz-V1]: Bypass & Anti-Ban Activated Successfully!")
+end
+
+InitBypassAndAntiBan()
+
+-- Hàm hỗ trợ kéo thả mượt mà
+local function MakeDraggable(guiObject)
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    guiObject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = guiObject.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    guiObject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            guiObject.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- ==================== VÒNG TRÒN AIM FOV (TÂM MÀN HÌNH) ====================
+local FOVRing = Drawing.new("Circle")
+FOVRing.Visible = false
+FOVRing.Transparency = 0.7
+FOVRing.Color = Color3.fromRGB(0, 162, 255)
+FOVRing.Thickness = 1.5
+FOVRing.NumSides = 64
+FOVRing.Radius = 120 -- Bán kính FOV mặc định, có thể tinh chỉnh bên dưới
+FOVRing.Filled = false
+
+-- ==================== HỆ THỐNG NHẠC NỀN ====================
+local BackgroundMusic = Instance.new("Sound")
+BackgroundMusic.Name = "BaorModzMusic"
+BackgroundMusic.Parent = SoundService
+BackgroundMusic.SoundId = "rbxassetid://119165216580381" 
+BackgroundMusic.Volume = 0.8
+BackgroundMusic.Looped = true
+
+pcall(function()
+    BackgroundMusic:Play()
+end)
+
+-- ==================== HỆ THỐNG NHẬP KEY (KEY SYSTEM) ====================
+local KeySystemGui = Instance.new("Frame")
+KeySystemGui.Name = "KeySystemGui"
+KeySystemGui.Parent = ScreenGui
+KeySystemGui.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+KeySystemGui.Position = UDim2.new(0.5, -180, 0.5, -100)
+KeySystemGui.Size = UDim2.new(0, 360, 0, 190)
+KeySystemGui.Active = true
+
+local UIStrokeKey = Instance.new("UIStroke")
+UIStrokeKey.Color = Color3.fromRGB(0, 162, 255)
+UIStrokeKey.Thickness = 2.5
+UIStrokeKey.Parent = KeySystemGui
+
+local UICornerKeySys = Instance.new("UICorner")
+UICornerKeySys.CornerRadius = UDim.new(0, 8)
+UICornerKeySys.Parent = KeySystemGui
+
+MakeDraggable(KeySystemGui)
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Parent = KeySystemGui
+KeyTitle.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Text = "  BAORMODZ-V1 | KEY SYSTEM"
+KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyTitle.TextSize = 13
+KeyTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local UICornerKeyTitle = Instance.new("UICorner")
+UICornerKeyTitle.CornerRadius = UDim.new(0, 8)
+UICornerKeyTitle.Parent = KeyTitle
+
+local KeyBox = Instance.new("TextBox")
+KeyBox.Parent = KeySystemGui
+KeyBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+KeyBox.Position = UDim2.new(0, 20, 0, 60)
+KeyBox.Size = UDim2.new(1, -40, 0, 45)
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.PlaceholderText = "Muốn lấy key Thì vào nhóm Tiktok @taisaovayem65"
+KeyBox.Text = ""
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.PlaceholderColor3 = Color3.fromRGB(160, 160, 160)
+KeyBox.TextSize = 11
+KeyBox.ClearTextOnFocus = false
+KeyBox.TextScaled = false
+
+local UICornerBox = Instance.new("UICorner")
+UICornerBox.CornerRadius = UDim.new(0, 6)
+UICornerBox.Parent = KeyBox
+
+local SubmitKeyBtn = Instance.new("TextButton")
+SubmitKeyBtn.Parent = KeySystemGui
+SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+SubmitKeyBtn.Position = UDim2.new(0, 20, 0, 120)
+SubmitKeyBtn.Size = UDim2.new(1, -40, 0, 45)
+SubmitKeyBtn.Font = Enum.Font.GothamBold
+SubmitKeyBtn.Text = "XÁC NHẬN KEY"
+SubmitKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitKeyBtn.TextSize = 14
+
+local UICornerSub = Instance.new("UICorner")
+UICornerSub.CornerRadius = UDim.new(0, 6)
+UICornerSub.Parent = SubmitKeyBtn
+
+-- Biến kiểm soát hiển thị menu chính sau khi nhập đúng key
+local MainUIContainer = Instance.new("Folder")
+MainUIContainer.Name = "MainUIContainer"
+MainUIContainer.Parent = ScreenGui
+
+local function BuildMainUI()
+    -- 1. NÚT NỔI DÀI TO HƠN (TOGGLE MENU CHÍNH - VIỀN ĐỎ)
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "ToggleButton"
+    ToggleButton.Parent = MainUIContainer
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    ToggleButton.Position = UDim2.new(0.05, 0, 0.15, 0)
+    ToggleButton.Size = UDim2.new(0, 260, 0, 65)
+    ToggleButton.Font = Enum.Font.GothamBold
+    ToggleButton.TextColor3 = Color3.fromRGB(255, 80, 80)
+    ToggleButton.TextSize = 18
+    ToggleButton.Text = "⚡ BAORMODZ-V1 MENU ⚡"
+    ToggleButton.Active = true
+
+    local UICornerBtn = Instance.new("UICorner")
+    UICornerBtn.CornerRadius = UDim.new(0, 8)
+    UICornerBtn.Parent = ToggleButton
+
+    local UIStrokeBtn = Instance.new("UIStroke")
+    UIStrokeBtn.Color = Color3.fromRGB(255, 0, 0)
+    UIStrokeBtn.Thickness = 3
+    UIStrokeBtn.Parent = ToggleButton
+
+    MakeDraggable(ToggleButton)
+
+    -- 2. NÚT NỔI HÌNH TRÒN: HEADLOCK NHANH (ĐỘC LẬP)
+    local HeadLockButton = Instance.new("TextButton")
+    HeadLockButton.Name = "HeadLockButton"
+    HeadLockButton.Parent = MainUIContainer
+    HeadLockButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    HeadLockButton.Position = UDim2.new(0.05, 0, 0.32, 0)
+    HeadLockButton.Size = UDim2.new(0, 65, 0, 65)
+    HeadLockButton.Font = Enum.Font.GothamBold
+    HeadLockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HeadLockButton.TextSize = 11
+    HeadLockButton.Text = "OFF\nHEADLOCK"
+    HeadLockButton.Active = true
+
+    local UICornerHead = Instance.new("UICorner")
+    UICornerHead.CornerRadius = UDim.new(1, 0)
+    UICornerHead.Parent = HeadLockButton
+
+    local UIStrokeHead = Instance.new("UIStroke")
+    UIStrokeHead.Color = Color3.fromRGB(255, 120, 120)
+    UIStrokeHead.Thickness = 2.5
+    UIStrokeHead.Parent = HeadLockButton
+
+    MakeDraggable(HeadLockButton)
+
+    -- 4. KHUNG MENU CHÍNH (VIỀN CẦU VỒNG RGB)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = MainUIContainer
+    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+    MainFrame.Position = UDim2.new(0.22, 0, 0.15, 0)
+    MainFrame.Size = UDim2.new(0, 300, 0, 410)
+    MainFrame.Visible = false
+    MainFrame.Active = true
+
+    local UIStrokeFrame = Instance.new("UIStroke")
+    UIStrokeFrame.Color = Color3.fromRGB(0, 162, 255)
+    UIStrokeFrame.Thickness = 3
+    UIStrokeFrame.Parent = MainFrame
+
+    -- Hiệu ứng đổi màu cầu vồng mượt mà cho viền khung chính
+    task.spawn(function()
+        while true do
+            for i = 0, 1, 0.005 do
+                UIStrokeFrame.Color = Color3.fromHSV(i, 1, 1)
+                task.wait(0.05)
+            end
+        end
+    end)
+
+    MakeDraggable(MainFrame)
+
+    -- Tiêu đề Menu
+    local Title = Instance.new("TextLabel")
+    Title.Parent = MainFrame
+    Title.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    Title.Size = UDim2.new(1, 0, 0, 45)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = "  BAORMODZ-V1 MENU CHEAT"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Nút đóng menu (X)
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Parent = Title
+    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 120, 120)
+    CloseButton.Position = UDim2.new(1, -40, 0.5, -15)
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 15
+
+    local UICornerClose = Instance.new("UICorner")
+    UICornerClose.CornerRadius = UDim.new(0, 4)
+    UICornerClose.Parent = CloseButton
+
+    CloseButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+    end)
+
+    ToggleButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = not MainFrame.Visible
+    end)
+
+    -- Banner Gojo Chủ Đề Đẹp Mắt
+    local VideoContainer = Instance.new("Frame")
+    VideoContainer.Name = "GojoMediaView"
+    VideoContainer.Parent = MainFrame
+    VideoContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    VideoContainer.Position = UDim2.new(0, 10, 0, 52)
+    VideoContainer.Size = UDim2.new(1, -20, 0, 105)
+    VideoContainer.ClipsDescendants = true
+
+    local UICornerVid = Instance.new("UICorner")
+    UICornerVid.CornerRadius = UDim.new(0, 6)
+    UICornerVid.Parent = VideoContainer
+
+    local BannerImage = Instance.new("ImageLabel")
+    BannerImage.Parent = VideoContainer
+    BannerImage.BackgroundTransparency = 1
+    BannerImage.Size = UDim2.new(1, 0, 1, 0)
+    BannerImage.Image = "rbxassetid://10511856020"
+    BannerImage.ScaleType = Enum.ScaleType.Crop
+
+    local VideoPlaceholderText = Instance.new("TextLabel")
+    VideoPlaceholderText.Parent = VideoContainer
+    VideoPlaceholderText.BackgroundTransparency = 0.4
+    VideoPlaceholderText.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    VideoPlaceholderText.Size = UDim2.new(1, 0, 0, 22)
+    VideoPlaceholderText.Position = UDim2.new(0, 0, 1, -22)
+    VideoPlaceholderText.Font = Enum.Font.GothamBold
+    VideoPlaceholderText.Text = "✨ BaorModz - Gojo Edition ✨"
+    VideoPlaceholderText.TextColor3 = Color3.fromRGB(0, 162, 255)
+    VideoPlaceholderText.TextSize = 11
+
+    -- ==================== THANH TAB CHUYỂN MỤC ====================
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Parent = MainFrame
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.Position = UDim2.new(0, 12, 0, 165)
+    TabContainer.Size = UDim2.new(1, -24, 0, 30)
+
+    local function CreateTabButton(name, posX, sizeX)
+        local tabBtn = Instance.new("TextButton")
+        tabBtn.Parent = TabContainer
+        tabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        tabBtn.Position = UDim2.new(posX, 0, 0, 0)
+        tabBtn.Size = UDim2.new(sizeX, -4, 1, 0)
+        tabBtn.Font = Enum.Font.GothamBold
+        tabBtn.Text = name
+        tabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+        tabBtn.TextSize = 11
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 4)
+        corner.Parent = tabBtn
+        
+        return tabBtn
+    end
+
+    local TabAim = CreateTabButton("AIM", 0, 0.25)
+    local TabESP = CreateTabButton("ESP", 0.25, 0.25)
+    local TabFixLag = CreateTabButton("FIX LAG", 0.50, 0.25)
+    local TabMusic = CreateTabButton("MUSIC", 0.75, 0.25)
+
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Parent = MainFrame
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Position = UDim2.new(0, 12, 0, 202)
+    ContentContainer.Size = UDim2.new(1, -24, 1, -212)
+
+    local function CreateContentPage()
+        local page = Instance.new("ScrollingFrame")
+        page.Parent = ContentContainer
+        page.BackgroundTransparency = 1
+        page.Size = UDim2.new(1, 0, 1, 0)
+        page.CanvasSize = UDim2.new(0, 0, 0, 180)
+        page.ScrollBarThickness = 3
+        page.Visible = false
+        return page
+    end
+
+    local PageAim = CreateContentPage()
+    local PageESP = CreateContentPage()
+    local PageFixLag = CreateContentPage()
+    local PageMusic = CreateContentPage()
+
+    local function SwitchTab(selectedTab, selectedPage)
+        for _, t in ipairs({TabAim, TabESP, TabFixLag, TabMusic}) do
+            t.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            t.TextColor3 = Color3.fromRGB(180, 180, 180)
+        end
+        for _, p in ipairs({PageAim, PageESP, PageFixLag, PageMusic}) do
+            p.Visible = false
+        end
+        
+        selectedTab.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+        selectedTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+        selectedPage.Visible = true
+    end
+
+    SwitchTab(TabAim, PageAim)
+
+    TabAim.MouseButton1Click:Connect(function() SwitchTab(TabAim, PageAim) end)
+    TabESP.MouseButton1Click:Connect(function() SwitchTab(TabESP, PageESP) end)
+    TabFixLag.MouseButton1Click:Connect(function() SwitchTab(TabFixLag, PageFixLag) end)
+    TabMusic.MouseButton1Click:Connect(function() SwitchTab(TabMusic, PageMusic) end)
+
+    local function CreatePageButton(parentPage, name, positionY, callback)
+        local btn = Instance.new("TextButton")
+        btn.Parent = parentPage
+        btn.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+        btn.Position = UDim2.new(0, 0, 0, positionY)
+        btn.Size = UDim2.new(1, 0, 0, 36)
+        btn.Font = Enum.Font.GothamSemibold
+        btn.Text = name .. " [ TẮT ]"
+        -- Chữ màu trắng
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 12
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 4)
+        corner.Parent = btn
+
+        -- Tạo sẵn UIStroke để làm viền đỏ xung quanh nút khi bật
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "ToggleStroke"
+        stroke.Parent = btn
+        stroke.Thickness = 2
+        stroke.Color = Color3.fromRGB(100, 100, 100) -- Mặc định viền xám mờ khi tắt
+        
+        local state = false
+        btn.MouseButton1Click:Connect(function()
+            state = not state
+            if state then
+                stroke.Color = Color3.fromRGB(255, 0, 0) -- Viền đổi sang màu đỏ khi BẬT
+                btn.Text = name .. " [ BẬT ]"
+            else
+                stroke.Color = Color3.fromRGB(100, 100, 100) -- Viền xám khi TẮT
+                btn.Text = name .. " [ TẮT ]"
+            end
+            callback(state)
+        end)
+        return btn
+    end
+
+    -- Trạng thái cấu hình
+    local HeadLockEnabled = false
+    local AimFOVEnabled = false
+    local HitboxEnabled = false
+    local ESPCharacterWallThroughEnabled = false
+    local ESPWeaponEnabled = false
+    local FixLagEnabled = false
+
+    -- ==================== 1. NỘI DUNG TAB: AIM ====================
+    CreatePageButton(PageAim, "HeadLock (Siêu Bá)", 0, function(state)
+        HeadLockEnabled = state
+        if state then
+            HeadLockButton.Text = "ON\nHEADLOCK"
+            UIStrokeHead.Color = Color3.fromRGB(75, 255, 75)
+        else
+            HeadLockButton.Text = "OFF\nHEADLOCK"
+            UIStrokeHead.Color = Color3.fromRGB(255, 120, 120)
+        end
+    end)
+
+    HeadLockButton.MouseButton1Click:Connect(function()
+        HeadLockEnabled = not HeadLockEnabled
+        if HeadLockEnabled then
+            HeadLockButton.Text = "ON\nHEADLOCK"
+            UIStrokeHead.Color = Color3.fromRGB(75, 255, 75)
+        else
+            HeadLockButton.Text = "OFF\nHEADLOCK"
+            UIStrokeHead.Color = Color3.fromRGB(255, 120, 120)
+        end
+    end)
+
+    CreatePageButton(PageAim, "Aim FOV (Giữ chuột bắn dính tâm)", 42, function(state)
+        AimFOVEnabled = state
+        FOVRing.Visible = state
+    end)
+
+    CreatePageButton(PageAim, "Hitbox Expander (Red Head)", 84, function(state)
+        HitboxEnabled = state
+        if not state then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player.Character then
+                    local head = player.Character:FindFirstChild("Head")
+                    if head then
+                        head.Size = Vector3.new(2, 1, 1)
+                        head.Transparency = 0
+                        head.CanCollide = true
+                        local colorPart = head:FindFirstChild("BaorModzHeadColor")
+                        if colorPart then colorPart:Destroy() end
+                    end
+                end
+            end
+        end
+    end)
+
+    -- ==================== 2. NỘI DUNG TAB: ESP ====================
+    CreatePageButton(PageESP, "ESP Character (Box Outline)", 0, function(state)
+        ESPCharacterWallThroughEnabled = state
+        if not state then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character then
+                    local hl = p.Character:FindFirstChild("BaorModzCharHighlight")
+                    if hl then hl:Destroy() end
+                end
+            end
+        end
+    end)
+
+    CreatePageButton(PageESP, "ESP Weapon (All)", 42, function(state)
+        ESPWeaponEnabled = state
+        if not state then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character then
+                    for _, tool in ipairs(p.Character:GetChildren()) do
+                        if tool:IsA("Tool") then
+                            local hl = tool:FindFirstChild("BaorModzWeaponHighlight")
+                            if hl then hl:Destroy() end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+
+    -- ==================== 3. NỘI DUNG TAB: FIX LAG ====================
+    CreatePageButton(PageFixLag, "Fix Lag (FF Graphics)", 0, function(state)
+        FixLagEnabled = state
+        pcall(function()
+            if state then
+                settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+                Lighting.GlobalShadows = false
+                Lighting.Brightness = 1
+                Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+                Lighting.FogEnd = 999999
+                
+                if Terrain then
+                    Terrain.WaterWaveSize = 0
+                    Terrain.WaterWaveTransparency = 1
+                    Terrain.WaterTransparency = 1
+                end
+                
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") then
+                        v.Material = Enum.Material.SmoothPlastic
+                        v.Reflectance = 0
+                    elseif v:IsA("Decal") or v:IsA("Texture") then
+                        v.Transparency = 1
+                    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+                        v.Enabled = false
+                    elseif v:IsA("PostEffect") then
+                        v.Enabled = false
+                    end
+                end
+            else
+                settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+                Lighting.GlobalShadows = true
+                Lighting.Brightness = 2
+                Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+            end
+        end)
+    end)
+
+    -- ==================== 4. NỘI DUNG TAB: MUSIC ====================
+    local MusicLabel = Instance.new("TextLabel")
+    MusicLabel.Parent = PageMusic
+    MusicLabel.BackgroundTransparency = 1
+    MusicLabel.Position = UDim2.new(0, 0, 0, 0)
+    MusicLabel.Size = UDim2.new(1, 0, 0, 35)
+    MusicLabel.Font = Enum.Font.GothamBold
+    MusicLabel.Text = "🎶 Đang phát ID: 119165216580381"
+    MusicLabel.TextColor3 = Color3.fromRGB(0, 162, 255)
+    MusicLabel.TextSize = 11
+
+    CreatePageButton(PageMusic, "Phát / Dừng Nhạc Nền", 40, function(state)
+        if state then
+            BackgroundMusic:Resume()
+        else
+            BackgroundMusic:Pause()
+        end
+    end)
+
+    -- ==================== VÒNG LẶP CHÍNH (RENDER STEPPED) ====================
+    RunService.RenderStepped:Connect(function()
+        -- Cập nhật vị trí vòng tròn FOV theo tâm màn hình
+        if AimFOVEnabled then
+            local viewportSize = Camera.ViewportSize
+            FOVRing.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+        end
+
+        -- 1. Xử lý HeadLock hoặc Aim FOV khi nhấn giữ bắn (MouseButton1)
+        if HeadLockEnabled or (AimFOVEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) then
+            local closestTargetHead = nil
+            local shortestDist = math.huge
+            local viewportSize = Camera.ViewportSize
+            local screenCenter = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+            
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    local targetHead = player.Character:FindFirstChild("Head")
+                    
+                    if humanoid and humanoid.Health > 0 and targetHead then
+                        local screenPoint, onScreen = Camera:WorldToViewportPoint(targetHead.Position)
+                        if onScreen then
+                            local pos2D = Vector2.new(screenPoint.X, screenPoint.Y)
+                            local dist = (pos2D - screenCenter).Magnitude
+                            
+                            -- Nếu bật Aim FOV thì giới hạn trong vòng tròn FOVRing.Radius, còn HeadLock thì bắt toàn màn hình
+                            local validCondition = HeadLockEnabled or (AimFOVEnabled and dist <= FOVRing.Radius)
+                            
+                            if validCondition and dist < shortestDist then
+                                shortestDist = dist
+                                closestTargetHead = targetHead
+                            end
+                        end
+                    end
+                end
+            end
+            
+            if closestTargetHead then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestTargetHead.Position)
+            end
+        end
+
+        -- 2. Xử lý Hitbox & ESP Nhân vật
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local char = player.Character
+                local head = char:FindFirstChild("Head")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                
+                if head and humanoid and humanoid.Health > 0 then
+                    if HitboxEnabled then
+                        head.Size = Vector3.new(4, 4, 4)
+                        head.Transparency = 0.4
+                        head.CanCollide = false
+                        
+                        local headColor = head:FindFirstChild("BaorModzHeadColor")
+                        if not headColor then
+                            headColor = Instance.new("SelectionBox")
+                            headColor.Name = "BaorModzHeadColor"
+                            headColor.Adornee = head
+                            headColor.Color3 = Color3.fromRGB(255, 0, 0)
+                            headColor.LineThickness = 0.05
+                            headColor.Parent = head
+                        end
+                    else
+                        local headColor = head:FindFirstChild("BaorModzHeadColor")
+                        if headColor then headColor:Destroy() end
+                    end
+
+                    local charHighlight = char:FindFirstChild("BaorModzCharHighlight")
+                    if ESPCharacterWallThroughEnabled then
+                        if not charHighlight then
+                            charHighlight = Instance.new("Highlight")
+                            charHighlight.Name = "BaorModzCharHighlight"
+                            charHighlight.Adornee = char
+                            charHighlight.FillColor = Color3.fromRGB(0, 162, 255)
+                            charHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            charHighlight.FillTransparency = 0.85
+                            charHighlight.OutlineTransparency = 0
+                            charHighlight.Parent = char
+                        end
+                    else
+                        if charHighlight then charHighlight:Destroy() end
+                    end
+                end
+            end
+        end
+
+        -- 3. Xử lý ESP Weapon
+        local allPlayers = Players:GetPlayers()
+        table.insert(allPlayers, LocalPlayer)
+
+        for _, player in ipairs(allPlayers) do
+            if player.Character then
+                for _, tool in ipairs(player.Character:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        local weaponHighlight = tool:FindFirstChild("BaorModzWeaponHighlight")
+                        if ESPWeaponEnabled then
+                            if not weaponHighlight then
+                                weaponHighlight = Instance.new("Highlight")
+                                weaponHighlight.Name = "BaorModzWeaponHighlight"
+                                weaponHighlight.Adornee = tool
+                                weaponHighlight.FillColor = Color3.fromRGB(120, 255, 120)
+                                weaponHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                                weaponHighlight.FillTransparency = 0.4
+                                weaponHighlight.OutlineTransparency = 0
+                                weaponHighlight.Parent = tool
+                            end
+                        else
+                            if weaponHighlight then weaponHighlight:Destroy() end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    print("BaorModz-V1 Menu Cheat Loaded Successfully!")
+end
+
+-- Xử lý sự kiện bấm nút xác nhận Key
+SubmitKeyBtn.MouseButton1Click:Connect(function()
+    if KeyBox.Text == "Baor Modz Pro V1" then
+        KeySystemGui:Destroy()
+        BuildMainUI()
+    else
+        KeyBox.Text = ""
+        KeyBox.PlaceholderText = "Sai Key! Xem Tiktok @taisaovayem65"
+    end
+end)
